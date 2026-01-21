@@ -10,7 +10,7 @@ export async function PUT(
     const { fileType } = await params;
     const { themeName, description } = await request.json();
 
-    if (!['actors', 'tags', 'theme', 'meta'].includes(fileType)) {
+    if (!['actors', 'tags', 'theme', 'meta','custom'].includes(fileType)) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 

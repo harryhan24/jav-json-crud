@@ -11,7 +11,7 @@ export interface ThemeData {
   themeList: Theme[];
 }
 
-export type FileType = 'actors' | 'tags' | 'theme' | 'meta';
+export type FileType = 'actors' | 'tags' | 'theme' | 'meta' | 'custom';
 
 export const CODE_PATTERNS: ReadonlyArray<RegExp> = [
   /([A-Z]{2,5})-?(\d{2,5})/,   // ABC-1234, ABC1234

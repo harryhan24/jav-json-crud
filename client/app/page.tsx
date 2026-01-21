@@ -398,6 +398,12 @@ export default function Home() {
           >
             Meta
           </button>
+          <button
+              className={fileType === 'custom' ? 'active' : ''}
+              onClick={() => setFileType('custom')}
+          >
+            Custom
+          </button>
         </div>
       </div>
 

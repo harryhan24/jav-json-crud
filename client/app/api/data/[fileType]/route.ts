@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, {params}: { params: Promise<{ fi
     try {
         const {fileType} = await params;
 
-        if (!['actors', 'tags', 'theme', 'meta'].includes(fileType)) {
+        if (!['actors', 'tags', 'theme', 'meta', 'custom'].includes(fileType)) {
             return NextResponse.json({error: 'Invalid file type'}, {status: 400});
         }
 
