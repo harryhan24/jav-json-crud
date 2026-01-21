@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    container_name: json-crud-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/src:/app/src
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=development
+    networks:
+      - json-crud-network
+
+  client:
+    build: ./client
+    container_name: json-crud-client
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - server
+    networks:
+      - json-crud-network
+
+networks:
+  json-crud-network:
+    driver: bridge
