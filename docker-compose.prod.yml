@@ -1,32 +1,14 @@
 version: '3.8'
 
 services:
-  server:
-    image: json-crud-server:latest
-    container_name: json-crud-server
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./data:/app/data
-    environment:
-      - NODE_ENV=production
-    restart: unless-stopped
-    networks:
-      - json-crud-network
-
-  client:
-    image: json-crud-client:latest
-    container_name: json-crud-client
+  app:
+    image: json-crud-app:latest
+    container_name: json-crud-app
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-    depends_on:
-      - server
+      - DATA_DIR=${DATA_DIR:-/data}
+    volumes:
+      - ${DATA_DIR:-/volume1/docker/json-crud/data}:/data
     restart: unless-stopped
-    networks:
-      - json-crud-network
-
-networks:
-  json-crud-network:
-    driver: bridge

@@ -25,7 +25,139 @@ body {
 .header h1 {
   color: #333;
   font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.file-type-selector {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.file-type-selector button {
+  padding: 10px 30px;
+  background: #e9ecef;
+  color: #333;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.file-type-selector button:hover {
+  background: #dee2e6;
+}
+
+.file-type-selector button.active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.metadata-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.metadata-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.metadata-content {
+  flex: 1;
+}
+
+.metadata-content h2 {
+  color: #333;
   margin-bottom: 10px;
+}
+
+.metadata-content p {
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.metadata-display button {
+  padding: 8px 20px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.metadata-display button:hover {
+  background: #5a6268;
+}
+
+.metadata-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.metadata-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.metadata-field label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.metadata-field input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.metadata-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.metadata-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.metadata-actions button:first-child {
+  background: #28a745;
+  color: white;
+}
+
+.metadata-actions button:first-child:hover {
+  background: #218838;
+}
+
+.metadata-actions button:last-child {
+  background: #6c757d;
+  color: white;
+}
+
+.metadata-actions button:last-child:hover {
+  background: #5a6268;
 }
 
 .create-theme-section {

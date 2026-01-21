@@ -1,7 +1,7 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import './App.css';
-import { Theme, validateCode } from './types';
-import { fetchThemes, createTheme, addItemsToTheme, deleteItem, reorderThemes, renameTheme } from './api';
+import { Theme, FileType } from '@/lib/types';
 import {
   DndContext,
   closestCenter,
@@ -19,6 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import './styles.css';
 
 interface SortableThemeItemProps {
   theme: Theme;
@@ -104,7 +105,11 @@ function SortableThemeItem({ theme, isSelected, onClick, onRename }: SortableThe
   );
 }
 
-function App() {
+export default function Home() {
+  const [fileType, setFileType] = useState<FileType>('theme');
+  const [themeName, setThemeName] = useState('');
+  const [description, setDescription] = useState('');
+  const [allowOnlyUpperCase, setAllowOnlyUpperCase] = useState(false);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [newThemeName, setNewThemeName] = useState('');
@@ -112,6 +117,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [editThemeName, setEditThemeName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -121,36 +129,83 @@ function App() {
   );
 
   useEffect(() => {
-    loadThemes();
-  }, []);
+    loadData();
+  }, [fileType]);
 
-  const loadThemes = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await fetchThemes();
-      setThemes(data);
+      const response = await fetch(`/api/data/${fileType}`);
+      if (!response.ok) throw new Error('Failed to fetch data');
+      const data = await response.json();
+
+      setThemeName(data.themeName);
+      setDescription(data.description);
+      setAllowOnlyUpperCase(data.allowOnlyUpperCase || false);
+      setThemes(data.themeList);
+      setSelectedTheme(null);
       setError('');
     } catch (err) {
-      setError('테마 목록을 불러오는데 실패했습니다.');
+      console.error(err);
+      setError('데이터를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateMetadata = async () => {
+    try {
+      const trimmedThemeName = editThemeName.trim();
+      const trimmedDescription = editDescription.trim();
+
+      const response = await fetch(`/api/data/${fileType}/metadata`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeName: trimmedThemeName, description: trimmedDescription }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update metadata');
+
+      setThemeName(trimmedThemeName);
+      setDescription(trimmedDescription);
+      setIsEditingMetadata(false);
+      setSuccess('메타데이터가 업데이트되었습니다!');
+      setError('');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('메타데이터 업데이트에 실패했습니다.');
+      }
     }
   };
 
   const handleCreateTheme = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newThemeName.trim()) {
+    const trimmedThemeName = newThemeName.trim();
+    if (!trimmedThemeName) {
       setError('테마 이름을 입력해주세요.');
       return;
     }
 
     try {
-      await createTheme(newThemeName);
+      const response = await fetch(`/api/themes?fileType=${fileType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: trimmedThemeName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create theme');
+      }
+
       setNewThemeName('');
       setSuccess('테마가 성공적으로 생성되었습니다!');
       setError('');
-      await loadThemes();
+      await loadData();
 
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -177,23 +232,27 @@ function App() {
       return;
     }
 
-    // Validate all items
-    const invalidItems = lines.filter(item => !validateCode(item));
-    if (invalidItems.length > 0) {
-      setError(`잘못된 형식입니다: ${invalidItems.join(', ')}`);
-      return;
-    }
-
     try {
-      const upperCaseItems = lines.map(item => item.toUpperCase());
-      await addItemsToTheme(selectedTheme.theme, upperCaseItems);
+      const processedItems = allowOnlyUpperCase
+        ? lines.map(item => item.toUpperCase())
+        : lines;
+
+      const response = await fetch(`/api/themes/${encodeURIComponent(selectedTheme.theme)}/items?fileType=${fileType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: processedItems }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add items');
+
       setNewItems('');
       setSuccess('항목이 성공적으로 추가되었습니다!');
       setError('');
 
-      const updatedThemes = await fetchThemes();
-      setThemes(updatedThemes);
-      const updatedSelected = updatedThemes.find(t => t.theme === selectedTheme.theme);
+      await loadData();
+      const dataResponse = await fetch(`/api/data/${fileType}`);
+      const data = await dataResponse.json();
+      const updatedSelected = data.themeList.find((t: Theme) => t.theme === selectedTheme.theme);
       if (updatedSelected) {
         setSelectedTheme(updatedSelected);
       }
@@ -216,13 +275,19 @@ function App() {
     }
 
     try {
-      await deleteItem(selectedTheme.theme, item);
+      const response = await fetch(`/api/themes/${encodeURIComponent(selectedTheme.theme)}/items/${encodeURIComponent(item)}?fileType=${fileType}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete item');
+
       setSuccess('항목이 삭제되었습니다!');
       setError('');
 
-      const updatedThemes = await fetchThemes();
-      setThemes(updatedThemes);
-      const updatedSelected = updatedThemes.find(t => t.theme === selectedTheme.theme);
+      await loadData();
+      const dataResponse = await fetch(`/api/data/${fileType}`);
+      const data = await dataResponse.json();
+      const updatedSelected = data.themeList.find((t: Theme) => t.theme === selectedTheme.theme);
       if (updatedSelected) {
         setSelectedTheme(updatedSelected);
       }
@@ -248,29 +313,43 @@ function App() {
       setThemes(newThemes);
 
       try {
-        // Update the order in the backend
         const themeNames = newThemes.map(t => t.theme);
-        await reorderThemes(themeNames);
+        const response = await fetch(`/api/themes/reorder?fileType=${fileType}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ themeNames }),
+        });
+
+        if (!response.ok) throw new Error('Failed to reorder themes');
       } catch (error) {
-        // If the backend update fails, revert to the original order
         setError('순서 변경에 실패했습니다.');
-        await loadThemes();
+        await loadData();
       }
     }
   };
 
   const handleRenameTheme = async (oldName: string, newName: string) => {
     try {
-      await renameTheme(oldName, newName);
+      const response = await fetch(`/api/themes/${encodeURIComponent(oldName)}?fileType=${fileType}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to rename theme');
+      }
+
       setSuccess('테마 이름이 변경되었습니다!');
       setError('');
 
-      const updatedThemes = await fetchThemes();
-      setThemes(updatedThemes);
+      await loadData();
+      const dataResponse = await fetch(`/api/data/${fileType}`);
+      const data = await dataResponse.json();
 
-      // Update selected theme if it was the renamed one
       if (selectedTheme && selectedTheme.theme === oldName) {
-        const updatedSelected = updatedThemes.find(t => t.theme === newName);
+        const updatedSelected = data.themeList.find((t: Theme) => t.theme === newName);
         if (updatedSelected) {
           setSelectedTheme(updatedSelected);
         }
@@ -294,6 +373,75 @@ function App() {
     <div className="app">
       <div className="header">
         <h1>JSON CRUD 관리</h1>
+        <div className="file-type-selector">
+          <button
+              className={fileType === 'theme' ? 'active' : ''}
+              onClick={() => setFileType('theme')}
+          >
+            Theme
+          </button>
+          <button
+            className={fileType === 'actors' ? 'active' : ''}
+            onClick={() => setFileType('actors')}
+          >
+            Actors
+          </button>
+          <button
+            className={fileType === 'tags' ? 'active' : ''}
+            onClick={() => setFileType('tags')}
+          >
+            Tags
+          </button>
+          <button
+              className={fileType === 'meta' ? 'active' : ''}
+              onClick={() => setFileType('meta')}
+          >
+            Meta
+          </button>
+        </div>
+      </div>
+
+      <div className="metadata-section">
+        {isEditingMetadata ? (
+          <div className="metadata-edit">
+            <div className="metadata-field">
+              <label>이름:</label>
+              <input
+                type="text"
+                value={editThemeName}
+                onChange={(e) => setEditThemeName(e.target.value)}
+              />
+            </div>
+            <div className="metadata-field">
+              <label>설명:</label>
+              <input
+                type="text"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </div>
+            <div className="metadata-actions">
+              <button onClick={handleUpdateMetadata}>저장</button>
+              <button onClick={() => setIsEditingMetadata(false)}>취소</button>
+            </div>
+          </div>
+        ) : (
+          <div className="metadata-display">
+            <div className="metadata-content">
+              <h2>{themeName}</h2>
+              <p>{description}</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditThemeName(themeName);
+                setEditDescription(description);
+                setIsEditingMetadata(true);
+              }}
+            >
+              편집
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="create-theme-section">
@@ -379,5 +527,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

@@ -1,34 +1,30 @@
 version: '3.8'
 
 services:
-  server:
-    build: ./server
-    container_name: json-crud-server
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./server/src:/app/src
-      - ./data:/app/data
-    environment:
-      - NODE_ENV=development
-    networks:
-      - json-crud-network
-
-  client:
-    build: ./client
-    container_name: json-crud-client
+  app:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: json-crud-app
     ports:
       - "3000:3000"
-    volumes:
-      - ./client/src:/app/src
-      - ./client/public:/app/public
     environment:
-      - NODE_ENV=development
-    depends_on:
-      - server
-    networks:
-      - json-crud-network
+      - NODE_ENV=production
+      - DATA_DIR=/data
+    volumes:
+      # Mount external data directory
+      - ./client/data:/data
+      # Or use a named volume for persistence
+      # - json-crud-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/data/theme', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
-networks:
-  json-crud-network:
-    driver: bridge
+# Uncomment to use named volume instead of bind mount
+# volumes:
+#   json-crud-data:
+#     driver: local

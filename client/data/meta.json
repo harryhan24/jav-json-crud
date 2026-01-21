@@ -1,0 +1,16 @@
+{
+    "version": 3,
+    "themeName": "메타",
+    "description": "메타 관리용입니다",
+    "allowOnlyUpperCase": false,
+    "themeList": [
+        {
+            "theme": "BLACK_LIST_TAGS",
+            "list": [
+                "1080p",
+                "1080P",
+                "ppp"
+            ]
+        }
+    ]
+}

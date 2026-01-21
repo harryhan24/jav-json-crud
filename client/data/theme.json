@@ -1,5 +1,8 @@
 {
     "version": 3,
+    "themeName": "메타",
+    "description": "메타 관리용입니다",
+    "allowOnlyUpperCase": true,
     "themeList": [
         {
             "theme": "회춘살롱",
@@ -210,6 +213,17 @@
             ]
         },
         {
+            "theme": "피스톤 파이브",
+            "list": [
+                "STARS-335",
+                "STARS-409",
+                "STARS-699",
+                "STARS-806",
+                "STARS-927",
+                "START-047"
+            ]
+        },
+        {
             "theme": "유부녀 독신남성과",
             "list": [
                 "HMN-033",
@@ -224,17 +238,6 @@
                 "HMN-463",
                 "HND-864",
                 "HND-914"
-            ]
-        },
-        {
-            "theme": "피스톤 파이브",
-            "list": [
-                "STARS-335",
-                "STARS-409",
-                "STARS-699",
-                "STARS-806",
-                "STARS-927",
-                "START-047"
             ]
         },
         {

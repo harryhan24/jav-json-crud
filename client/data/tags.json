@@ -1,0 +1,15 @@
+{
+    "version": 3,
+    "themeName": "커스텀 태그 추가하기",
+    "description": "이건 테스트입니다",
+    "allowOnlyUpperCase": true,
+    "themeList": [
+        {
+            "theme": "harry_best",
+            "list": [
+                "ABC-1234",
+                "AAA"
+            ]
+        }
+    ]
+}

@@ -3,6 +3,16 @@ export interface Theme {
   list: string[];
 }
 
+export interface ThemeData {
+  version: number;
+  themeName: string;
+  description: string;
+  allowOnlyUpperCase: boolean;
+  themeList: Theme[];
+}
+
+export type FileType = 'actors' | 'tags' | 'theme' | 'meta';
+
 export const CODE_PATTERNS: ReadonlyArray<RegExp> = [
   /([A-Z]{2,5})-?(\d{2,5})/,   // ABC-1234, ABC1234
   /([A-Z]{2,5})[-_](\d{2,5})/, // ABC_1234 or ABC-1234
